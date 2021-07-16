@@ -1,0 +1,178 @@
+Sub Consulta_DIAN()
+    
+    On Error Resume Next
+    Dim IE As Object, obj As Object
+    Dim Rpta$, Nit$, fil&
+    Dim Valor As Long
+    Dim Fila As Integer
+    Dim Fila1 As Integer
+    Dim Final1 As Integer
+
+
+
+Valor = 2
+
+
+
+Dim Respuesta As Integer ' La función devuelve un valor entero
+    Respuesta = MsgBox("Este proceso puede tardar unos minutos por favor no haga uso del computador mientras se realiza , " & " ¿Deseas continuar?", vbYesNo)
+        Select Case Respuesta
+            Case vbYes
+            
+            
+            
+            
+Set IE = CreateObject("InternetExplorer.Application")
+
+IE.navigate "https://muisca.dian.gov.co/WebRutMuisca/DefConsultaEstadoRUT.faces"
+IE.navigate "https://muisca.dian.gov.co/WebRutMuisca/DefConsultaEstadoRUT.faces"
+ 
+Do While IE.Busy
+   Application.Wait VBA.DateAdd("s", 1, VBA.Now)
+   DoEvents
+Loop
+
+Application.Wait (Now + TimeValue("00:00:02"))
+
+
+
+IE.Visible = False
+
+Fila1 = 2
+
+Do While Hoja1.Cells(Fila1, "A") <> ""
+    Fila1 = Fila1 + 1
+
+Loop
+             
+Final1 = Fila1
+             
+             
+For Fila1 = 2 To Final1
+
+Dim Contar As Integer
+Contar = 0
+   
+IE.document.all.Item("vistaConsultaEstadoRUT:formConsultaEstadoRUT:numNit").Value = Hoja1.Cells(Fila1, "A")
+IE.document.getElementById("vistaConsultaEstadoRUT:formConsultaEstadoRUT:btnBuscar").Click
+
+Do While IE.Busy
+   Application.Wait VBA.DateAdd("s", 1, Now)
+   DoEvents
+Loop
+
+Hoja1.Cells(Fila1, "A").Select
+ 
+Set obj = IE.document.getElementById("vistaConsultaEstadoRUT:formConsultaEstadoRUT:dv")
+Hoja1.Cells(Fila1, "B") = obj.innerHTML 'Digito de Verificación
+obj = ""
+
+Set obj = IE.document.getElementById("vistaConsultaEstadoRUT:formConsultaEstadoRUT:razonSocial")
+Hoja1.Cells(Fila1, "C") = obj.innerHTML 'Razón Social
+obj = ""
+
+
+Set obj = IE.document.getElementById("vistaConsultaEstadoRUT:formConsultaEstadoRUT:primerNombre")
+Hoja1.Cells(Fila1, "D") = obj.innerHTML ' Primer Nombre
+obj = ""
+
+Set obj = IE.document.getElementById("vistaConsultaEstadoRUT:formConsultaEstadoRUT:otrosNombres")
+Hoja1.Cells(Fila1, "E") = obj.innerHTML ' Segundo Nombre
+obj = ""
+
+Set obj = IE.document.getElementById("vistaConsultaEstadoRUT:formConsultaEstadoRUT:primerApellido")
+Hoja1.Cells(Fila1, "F") = obj.innerHTML 'Primer Apellido
+obj = ""
+
+Set obj = IE.document.getElementById("vistaConsultaEstadoRUT:formConsultaEstadoRUT:segundoApellido")
+Hoja1.Cells(Fila1, "G") = obj.innerHTML 'Segundo Apellido
+obj = ""
+
+
+'Validamos los errores que se generan al cargar la información al sistema
+
+If Hoja1.Cells(Fila1, "C") = Hoja1.Cells(Fila1, "B") Then
+   If Hoja1.Cells(Fila1, "D") <> "" Then
+      Hoja1.Cells(Fila1, "C") = ""
+   End If
+End If
+    
+'Luego de Validación borramos los campos innecesarios cuando el campo Razón Social se ha diligenciado
+If Hoja1.Cells(Fila1, "C") <> "" Then
+    Hoja1.Cells(Fila1, "D") = ""
+    Hoja1.Cells(Fila1, "E") = ""
+    Hoja1.Cells(Fila1, "F") = ""
+    Hoja1.Cells(Fila1, "G") = ""
+End If
+
+
+'Cargamos el campo Estado
+
+Set obj = IE.document.getElementById("vistaConsultaEstadoRUT:formConsultaEstadoRUT:estado")
+    Hoja1.Cells(Fila1, "H") = obj.innerHTML 'Estado del Tercero
+ obj = ""
+  
+'Corremos (Aumentamos) registros en los formularios
+  
+  Frm_Dian.Label1.Caption = Hoja2.Range("B1").Value
+  Frm_Dian.Label4.Caption = Hoja2.Range("B2").Value
+  Frm_Dian.Label5.Caption = Hoja2.Range("B3").Value
+  
+'Asignamos Valor a los registros errados en la pagina de la DIAN
+  
+   If Hoja1.Cells(Fila1 - 1, "H") = "" Then
+       Hoja1.Cells(Fila1 - 1, "H") = "REGISTRO NO ENCONTRADO"
+       Frm_Dian.Label1.SetFocus
+    End If
+ 
+
+'Validamos la copia del digito de verificaciòn en otra celda la cual no sea la correcta
+
+'Funciona solo si hay consulta en la DIAN
+If (Hoja1.Cells(Valor, "B")) <> "" Then
+
+If IsNumeric(Hoja1.Cells(Valor, "C")) Then
+    Hoja1.Cells(Valor, "C") = ""
+Else
+    Hoja1.Cells(Valor, "D") = ""
+    Hoja1.Cells(Valor, "E") = ""
+    Hoja1.Cells(Valor, "F") = ""
+    Hoja1.Cells(Valor, "G") = ""
+End If
+End If
+
+
+Next Fila1
+IE.Visible = False
+IE.Quit
+MsgBox ("Proceso Finalizado")
+Set IE = Nothing
+
+Case vbNo
+
+
+End Select
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+End Sub
